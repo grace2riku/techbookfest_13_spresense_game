@@ -2,7 +2,11 @@ PREDEF:
   - preface.re
 
 CHAPS:
-  - article.re
+  - concept.re
+  - musical_chairs.re
+  - shooting_watch.re
+  - electric_guitar.re
+  - conclusion.re
 
 APPENDIX:
 
