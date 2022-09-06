@@ -3,6 +3,7 @@ PREDEF:
 
 CHAPS:
   - concept.re
+  - development_environment.re
   - musical_chairs.re
   - shooting_watch.re
   - electric_guitar.re
