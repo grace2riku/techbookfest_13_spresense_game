@@ -10,11 +10,11 @@ Spresense SDKの開発環境を構築します。
 Linux、Windowsでも環境構築可能のようです。
 
 Spresense SDKの開発環境構築はWebのドキュメント@<fn>{spresense_doc_url}とおりに進めれば完了できます。
-SpresenseドキュメントにはCLI・IDE(Visual Studio Code)の2とおりの環境構築方法が記載されています。
+SpresenseドキュメントにはCLI・IDE（Visual Studio Code）の2とおりの環境構築方法が記載されています。
 私はCLIで環境構築したので本書の記載はCLIの記載・手順となります。
 
 === Spresense SDKバージョン
-Spresense SDKのバージョンは執筆当時の最新版【v2.6.0 (2022/08/05)】で確認しています。
+Spresense SDKのバージョンは執筆当時の最新版【v2.6.0 （2022/08/05）】で確認しています。
 
 
 == ゲームのソースコード取得
@@ -46,7 +46,7 @@ spresense_game-mainディレクトリには3つのアプリがあります。
 
 コンフィグレーションの手順を書きます。
 
-/Users/ユーザー名/spresense/sdk ディレクトリに移動します(カレントディレクトリがspresenseの前提とします)。
+/Users/ユーザー名/spresense/sdk ディレクトリに移動します（カレントディレクトリがspresenseの前提とします）。
 
 //cmd{
 $ cd sdk
@@ -117,9 +117,9 @@ electric_guitar・musical chairs・shooting_watchを選択し
 //image[config-m_10_spresense_game変更後][Spresense_gameコンフィグレーション変更]{ 
 //}
 
- * electric_guitar: Mに設定(バイナリを別ファイルにする。SDカードに保存し実行する想定)
- * musical chairs: *に設定(nuttx.spkファイルに組み込まれる)
- * shooting_watch: Mに設定(バイナリを別ファイルにする。SDカードに保存し実行する想定)
+ * electric_guitar: Mに設定（バイナリを別ファイルにする。SDカードに保存し実行する想定）
+ * musical chairs: *に設定（nuttx.spkファイルに組み込まれる）
+ * shooting_watch: Mに設定（バイナリを別ファイルにする。SDカードに保存し実行する想定）
 
 本当であればmusical chairsもMに設定し、別ファイルにしたかったのですが、
 この後のmakeでエラーになり原因理解・問題解決できなかったためnuttx.spkファイルに組み込むようにしました。
@@ -158,7 +158,7 @@ configuration written to .config
 
 tools/config.pyはコンフィグレーションを行うツール名称です。
 tools/config.py以降の記述がコンフィグレーション設定です。
-今回の作った3つのアプリに必要なコンフィグレーションを全て設定しています。
+今回の作った3つのアプリに必要なコンフィグレーションをすべて設定しています。
 
 ==== examples/audio_player
 @<title>{musical_chairs}のコンフィグレーションです。
@@ -171,7 +171,7 @@ tools/config.py以降の記述がコンフィグレーション設定です。
 ==== examples/audio_beep
 @<title>{electric_guitar}のコンフィグレーションです。
 @<title>{electric_guitar}はbeep音を鳴らす動作があります。
-beep音を鳴らすサンプルプログラム(examples/audio_beep)があったのでこのコンフィグレーションを設定しました。
+beep音を鳴らすサンプルプログラム（examples/audio_beep）があったのでこのコンフィグレーションを設定しました。
 @<img>{config-m_7_examples変更後}でexamples/audio_beepを非対象にしていました。
 これは@<hd>{development_environment|examples/audio_player}と同じく、examples/audio_beepのアプリケーションはバイナリファイルに組込み不要なためです。
 
