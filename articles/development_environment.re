@@ -18,7 +18,7 @@ Spresense SDKのバージョンは執筆当時の最新版【v2.6.0 (2022/08/05)
 
 
 == ゲームのソースコード取得
-//footnote[app_add_url][@<href>{https://developer.sony.com/develop/spresense/docs/sdk_set_up_ja.html#_%E5%88%A5%E3%83%87%E3%82%A3%E3%83%AC%E3%82%AF%E3%83%88%E3%83%AA%E3%81%AB%E8%BF%BD%E5%8A%A0%E3%81%99%E3%82%8B, ユーザーアプリの追加方法 参考URL}]
+//footnote[app_add_url][@<href>{https://developer.sony.com/develop/spresense/docs/sdk_set_up_ja.html#_%E3%83%84%E3%83%BC%E3%83%AB%E3%82%92%E4%BD%BF%E7%94%A8%E3%81%99%E3%82%8B, ユーザーアプリの追加方法 参考URL}]
 //footnote[github_url][@<href>{https://github.com/grace2riku/spresense_game, Spresenseゲームgithub}]
 
 今回作ったゲームのソースコードをgithub@<fn>{github_url}からZIPでダウンロードします。
@@ -31,6 +31,14 @@ Spresense SDKのバージョンは執筆当時の最新版【v2.6.0 (2022/08/05)
 ここにコピーするのでつぎのようになります。
 
 /Users/ユーザー名/spresense/spresense_game-main
+
+spresense_game-mainディレクトリには3つのアプリがあります。
+
+ * musical_chairs: 椅子取りゲーム
+ * shooting_watch: 連射測定ゲーム
+ * electric_guitar: エレキギター
+
+アプリの作成はWebドキュメント@<fn>{app_add_url}6. ユーザーアプリの追加方法 -> 6.3. ツールを使用するの手順とおりに作業しました。
 
 
 == コンフィグレーション
@@ -90,8 +98,8 @@ Escキーを押下し、ひとつ上の階層に移動します。
 //image[config-m_6_examples選択中][Spresense SDK -> Examplesの階層]{ 
 //}
 
-Audio beep example、Audio player exampleを選択しスペースキーを
-押下します。@<img>{config-m_7_examples変更後}のように*を空白スペースに変更します。
+Audio beep example、Audio player exampleを選択しスペースキーを押下します。
+@<img>{config-m_7_examples変更後}のように*を空白スペースに変更します。
 //image[config-m_7_examples変更後][Audio beep example、Audio player exampleを非選択]{ 
 //}
 
@@ -123,7 +131,7 @@ Escキーを押下し続けて@<img>{config-m_11_save}の画面に移動しま�
 //}
 
 
-makeを実行せよ、と表示されます。
+makeを実行して、と表示されます。
 //cmd{
 $ tools/config.py -m
 LN: include/arch to arch/arm/include
@@ -142,6 +150,62 @@ configuration written to .config
 //}
 
 === コンフィグレーション要素について
+コンフィグレーションの設定について説明します。
+
+//cmd{
+@<seqsplit>{$ tools/config.py examples/audio_player examples/audio_beep examples/sixaxis feature/loadable device/sdcard feature/usbmsc}
+//}
+
+tools/config.pyはコンフィグレーションを行うツール名称です。
+tools/config.py以降の記述がコンフィグレーション設定です。
+今回の作った3つのアプリに必要なコンフィグレーションを全て設定しています。
+
+==== examples/audio_player
+@<title>{musical_chairs}のコンフィグレーションです。
+@<title>{musical_chairs}はexamples/audio_playerのサンプルプログラムをベースにして作りました。
+そのためexamples/audio_playerのコンフィグレーションを設定しています。
+@<img>{config-m_7_examples変更後}でexamples/audio_playerを非対象にしていました。
+これはexamples/audio_playerのアプリケーションはバイナリファイルに組込み不要なためです。
+
+
+==== examples/audio_beep
+@<title>{electric_guitar}のコンフィグレーションです。
+@<title>{electric_guitar}はbeep音を鳴らす動作があります。
+beep音を鳴らすサンプルプログラム(examples/audio_beep)があったのでこのコンフィグレーションを設定しました。
+@<img>{config-m_7_examples変更後}でexamples/audio_beepを非対象にしていました。
+これは@<hd>{development_environment|examples/audio_player}と同じく、examples/audio_beepのアプリケーションはバイナリファイルに組込み不要なためです。
+
+==== examples/sixaxis
+@<title>{electric_guitar}のコンフィグレーションです。
+@<title>{electric_guitar}はジャイロセンサ（BMI160）で傾きを取得する動作があります。
+ジャイロセンサのサンプルプログラム（examples/sixaxis）があったのでこのコンフィグレーションを設定しました。
+@<img>{config-m_4}でexamples/sixaxisを非対象にしていました。
+これは@<hd>{development_environment|examples/audio_player}と同じく、examples/sixaxisのアプリケーションはバイナリファイルに組込み不要なためです。
+
+
+==== feature/loadable, device/sdcard
+//footnote[loadable_url][@<href>{https://developer.sony.com/develop/spresense/docs/sdk_tutorials_ja.html#_%E3%83%AD%E3%83%BC%E3%83%80%E3%83%96%E3%83%ABelf%E3%83%81%E3%83%A5%E3%83%BC%E3%83%88%E3%83%AA%E3%82%A2%E3%83%AB, ローダブルELFチュートリアルの説明先URL}]
+
+@<hd>{concept|ローダブルELF}で書いたとおりローダブルELFは【OSとアプリケーションを別々のバイナリで作成し、動作時にアプリケーションをロードして実行できる機能】でした。
+ローダブルELFのコンフィグレーションはWebドキュメントのチュートリアル@<fn>{loadable_url}に記載されているとおりに設定しました。
+
+
+==== feature/usbmsc
+//footnote[usbmsc_url][@<href>{https://developer.sony.com/develop/spresense/docs/sdk_tutorials_ja.html#_system_usbmsc, USB MSC機能の説明先URL}]
+
+このコンフィグレーションはUSB MSC機能@<fn>{usbmsc_url}を使うために設定しました。
+USB MSC（Mass Storage Class）はホストPCからSpresenseボード上のSDカードへ直接アクセスすることができます。
+今回はつぎの用途でUSB MSC機能を使います。
+
+ * アプリケーションを変更しSDカードにアプリのバイナリファイルを保存するとき
+ * SDカードに保存してある椅子取りゲームの音声ファイルを変更するとき
+
+USB MSC機能を使わなくともよいですがその場合、つぎを手作業で行う必要があります。
+
+ * Spresenseボード上のSDカードを抜き、ホストPCに接続しデータ書き込み
+ * SDカードをSpresenseボードに差し直し
+
+開発効率アップに影響する機能と思ったのでコンフィグレーションに設定しました。
 
 
 == make
@@ -150,7 +214,9 @@ makeします。-jオプションで並列ビルドが可能です。
 $ make -j
 //}
 
-makeが正常終了するとつぎの表示になります(make実行結果の最終行付近から引用です)。
+makeが正常終了するとつぎの表示になります（make実行結果の最終行付近から引用です）。
+OSとアプリが組み込まれたnuttx.spkファイルが作成されます。
+
 
 //cmd{
 @<seqsplit>{AR (create): libboard.a   cxd56_main.o cxd56_clock.o cxd56_bringup.o cxd56_appinit.o cxd56_power.o cxd56_ioctl.o cxd56_ostest.o cxd56_gpioif.o cxd56_pwm.o cxd56_spi.o cxd56_sdcard.o cxd56_boot.o cxd56_audio.o cxd56_uid.o cxd56_crashdump.o cxd56_sensors.o cxd56_bmi160_i2c.o cxd56_netinit.o cxd56_flash.o cxd56_usbmsc.o cxd56_i2cdev.o cxd56_spidev.o }
