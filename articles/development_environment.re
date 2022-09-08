@@ -228,9 +228,138 @@ File nuttx.spk is successfully created.
 Done.
 //}
 
+nuttx.spkファイルはsdkディレクトリに作成されます。
+
+ * /Users/ユーザー名/spresense/sdk/nuttx.spk
+
+ローダブルELF指定したアプリ（shooting_watch、electric_guitar）は@<img>{バイナリ保存先}に作成されます。
+//image[バイナリ保存先][ローダブルELF指定したアプリの作成ディレクトリ]{ 
+//}
+
+ * /Users/ユーザー名/spresense/sdk/apps/bin
+
 
 == 書き込み
+nuttx.spkファイルをSpresenseに書き込みます。
 
-== ゲームバイナリをSDカードにコピー
+まずはホストPCとSpresenseメインボードをUSBケーブルで接続します。
+つぎのコマンドでSpresenseメインボードのシリアルポートのデバイスファイル名を調べます。
+
+//cmd{
+$ ls /dev/cu.usb*
+/dev/cu.usbserial-141410
+//}
+
+デバイスファイル名は/dev/cu.usbserial-141410であることがわかりました。
+デバイスファイル名は読者のみなさんの環境で異なると思いますのでこの後のデバイスファイ名は適宜読み替えてください。
+
+つぎのコマンドを実行しmakeで作成されたnuttx.spkをSpresenseに書き込みます。
+
+//cmd{
+tools/flash.sh -c /dev/cu.usbserial-141410 nuttx.spk
+//}
+
+正常に書き込みが終了するとつぎの表示になり、Spresenseが再起動します。
+
+//cmd{
+>>> Install files ...
+install -b 115200
+Install nuttx.spk
+|0%-----------------------------50%------------------------------100%|
+######################################################################
+
+301472 bytes loaded.
+Package validation is OK.
+Saving package to "nuttx"
+updater# sync
+updater# Restarting the board ...
+reboot
+//}
+
 
 == シェルと接続
+書き込みが終了したらNuttxのシェル（nsh）と接続します。
+
+つぎのコマンドを実行します。
+私はターミナルにminicomを使用しました。ボーレート115200bpsであれば他のターミナルでも接続できます。
+
+//cmd{
+minicom -D /dev/cu.usbserial-141410 -b 115200
+//}
+
+シェルに接続できるとnsh>のように表示されます。
+
+//cmd{
+Welcome to minicom 2.8
+
+OPTIONS: 
+Compiled on Jan  4 2021, 00:04:46.
+Port /dev/cu.usbserial-141410, 12:35:17
+
+Press Meta-Z for help on special keys
+
+
+NuttShell (NSH) NuttX-10.2.0
+nsh> 
+//}
+
+helpコマンドを実行してみます。
+Builtin Apps:につぎがあればOKです。
+
+ * msconn : USB MSC機能接続コマンド
+ * msdis : USB MSC機能接続解除コマンド
+ * musical_chairs : 椅子取りゲーム
+
+//cmd{
+nsh> help
+help usage:  help [-v] [<cmd>]
+
+  .          cmp        false      ls         nslookup   sleep      usleep     
+  [          dirname    free       mkdir      poweroff   source     xd         
+  ?          date       help       mkfatfs    ps         test       
+  basename   dd         hexdump    mkfifo     pwd        time       
+  break      df         ifconfig   mkrd       reboot     true       
+  cat        echo       ifdown     mksmartfs  rm         uname      
+  cd         exec       ifup       mount      rmdir      umount     
+  cp         exit       kill       mv         set        unset      
+
+Builtin Apps:
+  msconn          msdis           musical_chairs  nsh   
+//}
+
+
+== ゲームバイナリをSDカードにコピー
+連射測定ゲームとエレキギターはローダブルELFのモジュールとしたのでBuiltin Apps:には組み込まれていません。
+マイクロSDカードに連射測定ゲームとエレキギターのバイナリをコピーします。
+
+Spresense拡張ボードのUSBミニBコネクタとホストPCをUSBケーブルで接続します。
+シェルに接続した状態からつぎのコマンドを実行するとつぎの表示になります。
+
+//cmd{
+nsh> msconn
+mcsonn_main: Creating block drivers
+mcsonn_main: Configuring with NLUNS=1
+mcsonn_main: handle=0x2d063910
+mcsonn_main: Bind LUN=0 to /dev/mmcsd0
+mcsonn_main: Connected
+//}
+
+ホストPCに記憶デバイスとして認識されていればホストPC⇄Spresenseでデータ転送が可能です。
+
+私のホストPCでは@<img>{usbmsc認識}のように認識されました。
+//image[usbmsc認識][マイクロSDカードが記憶デバイスとしてホストPCに認識される]{ 
+//}
+
+あとは連射測定ゲーム（shooting_watch）とエレキギター（electric_guitar）のバイナリをコピーします。
+
+ファイルのコピーが終わったらホストPCとマイクロSDカードの接続を解除します。
+つぎのコマンドを実行します。
+//cmd{
+nsh> msdis
+msdis: Disconnected
+//}
+
+このコマンドでホストPCからマイクロSDカードが見えなくなります。
+
+これで環境構築は終わりです。
+ゲームをプレイする準備ができました。
