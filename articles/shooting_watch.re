@@ -332,7 +332,7 @@ int main(int argc, FAR char *argv[])
 === 連射測定中待機
 連射状態時に呼び出され@<list>{shooting_process_list}の中で10秒間待機します。
 この待ち時間中にSW1の割り込みハンドラでSW1押下の連射を測定します。
-連射測定中ということをわかりやすくするために10秒の間、500msごとにLEDを点滅します。
+連射測定中ということをわかりやすくするために10秒の間、500msごとにUSER_LED2を点滅します。
 
 //listnum[shooting_process_list][連射測定中待機]{
 void shooting_process(uint32_t play_time)
@@ -357,6 +357,9 @@ void shooting_process(uint32_t play_time)
 //}
 
 === SW1割り込みハンドラ（SW1押下回数測定）
+@<list>{gpio_switch_1_handler_list}はSW1の割り込みハンドラです。
+SW1を押下時の立ち下がりエッジで割り込みが発生します。
+SW1の役割は【SW1押下回数の更新のみ】です。
 
 //listnum[gpio_switch_1_handler_list][SW1割り込みハンドラ]{
 bool exit_shooting_watch = false;
@@ -374,6 +377,12 @@ static int shooting_watch_gpio_switch_1_handler(int irq, FAR void *context, FAR 
 
 
 === SW2割り込みハンドラ（ゲーム開始判定・ゲーム終了判定）
+@<list>{gpio_switch_2_handler_list}はSW2の割り込みハンドラです。
+SW2を押下時の立ち下がりエッジで割り込みが発生します。
+SW2の役割はつぎの2つです。
+
+ * ゲーム開始のトリガ
+ * SW1とSW2同時押下検出でゲーム終了
 
 //listnum[gpio_switch_2_handler_list][SW2割り込みハンドラ]{
 bool exit_shooting_watch = false;
@@ -394,8 +403,12 @@ static int shooting_watch_gpio_switch_2_handler(int irq, FAR void *context, FAR 
 }
 //}
 
-=== GPIO終了処理（割り込み無効化）
 
+=== GPIO終了処理（割り込み無効化）
+@<list>{shooting_watch_gpio_destroy_list}はGPIO終了処理です。
+SW1とSW2の割り込み無効にします。
+
+//listnum[shooting_watch_gpio_destroy_list][GPIO終了処理（割り込み無効化）]{
 void shooting_watch_gpio_destroy(void)
 {
   if (board_gpio_int(SWITCH_1, false) < 0) { 
@@ -408,6 +421,7 @@ void shooting_watch_gpio_destroy(void)
 
   return;
 }
+//}
 
 
 == Tips

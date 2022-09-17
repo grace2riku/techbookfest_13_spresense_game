@@ -726,6 +726,11 @@ void gpio_destroy(void)
 
 
 == Tips
+//comment{
+TODO: 割り込み禁止する必要性について
+
+
+//}
 
 == 課題
 現状の椅子取りゲームの課題です。
