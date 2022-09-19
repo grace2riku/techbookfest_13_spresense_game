@@ -111,6 +111,182 @@ Spresense拡張ボードに接続します。椅子取りゲームと同じ汎�
 
 
 == ソースコード解説
+エレキギターのソースコードについて解説します。
+ざっくり分類するとつぎになります。
+
+ * examples/audio_beepサンプルプログラム流用部分
+ * APS学習基板GPIO初期化
+ * SpresenseメインボードLED操作
+ * examples/sixaxisサンプルプログラム流用部分
+ * 角速度-角度算出
+ * ビープ音再生
+
+=== examples/audio_beepサンプルプログラム流用部分
+エレキギターはBMI160の傾きによりドレミのビープ音を発音します。
+ビープ音の発音はexamples/audio_beepサンプルプログラムを流用しています。
+具体的につぎの動作を流用しています。
+
+ * ビープ音初期化
+ * ビープ音再生
+ * ビープ音終了処理
+
+対象ソースコードはつぎになります。
+
+ * /Users/ユーザー名/spresense/spresense_game-main/electric_guitar/audio_beep_main.cxx
+
+
+==== ビープ音初期化
+@<list>{audio_beep_create_list}はビープ音初期化のコードです。
+examples/audio_beepサンプルプログラムのaudio_beep_main.cxxのmain関数に初期化コードが書いてあります。
+その初期化コードをaudio_beep_create関数でラップし、エレキギターアプリケーションから呼び出すようにしました。
+
+//listnum[audio_beep_create_list][ビープ音初期化]{
+extern "C" int audio_beep_create(void) {
+  /* Set I/O parameters for power on. */
+
+  if (!app_power_on()) 
+    {
+      printf("Error: app_power_on() failure.\n");
+      return 1;
+    }
+
+  /* Cancel output mute. */
+
+  if (board_external_amp_mute_control(false) != OK)
+    {
+      printf("Error: board_external_amp_mute_control(false) failuer.\n");
+      return 1;
+    }
+
+  printf("Start AudioBeep example\n");
+
+
+
+  return 0;
+}
+//}
+
+==== ビープ音再生
+@<list>{audio_beep_list}はビープ再生のコードです。
+関数内部ではapp_beep関数を呼び出しています。
+
+//listnum[audio_beep_list][ビープ音再生（ラッパー関数）]{
+extern "C" int audio_beep(int frequency) {
+  bool beep_enable = true;
+
+  if (!frequency) {
+    beep_enable = false;
+  } 
+
+  if (!app_beep(beep_enable, -40, frequency)) {
+      return 1;
+  }
+
+  return 0;
+}
+//}
+
+@<list>{app_beep_list}はビープ音再生のコードです。
+この関数呼び出しでビープ音が再生されます。
+
+//listnum[app_beep_list][ビープ音再生]{
+static bool app_beep(bool en = false, int16_t vol = 255, uint16_t freq = 0)
+{
+  if (!en)
+    {
+      /* Stop beep */
+
+      if (cxd56_audio_stop_beep() != CXD56_AUDIO_ECODE_OK)
+        {
+          return false;
+        }
+    }
+
+  if (0 != freq)
+    {
+      /* Set beep frequency parameter */
+
+      if (cxd56_audio_set_beep_freq(freq) != CXD56_AUDIO_ECODE_OK)
+        {
+          return false;
+        }
+    }
+
+  if (255 != vol)
+    {
+      /* Set beep volume parameter */
+
+      if (cxd56_audio_set_beep_vol(vol) != CXD56_AUDIO_ECODE_OK)
+        {
+          return false;
+        }
+    }
+
+  if (en)
+    {
+      /* Play beep */
+
+      if (cxd56_audio_play_beep() != CXD56_AUDIO_ECODE_OK)
+        {
+          return false;
+        }
+    }
+
+  return true;
+}
+//}
+
+==== ビープ音終了処理
+@<list>{audio_beep_destroy_list}はビープ音終了のコードです。
+examples/audio_beepサンプルプログラムのaudio_beep_main.cxxのmain関数に終了処理が書いてあります。
+その初期化コードをaudio_beep_destroy_list関数でラップし、エレキギターアプリケーションから呼び出すようにしました。
+
+//listnum[audio_beep_destroy_list][ビープ音終了処理]{
+extern "C" int audio_beep_destroy(void) {
+  /* Beep off. */
+
+  if (!app_beep())
+    {
+      printf("Error: app_beep() failuer.\n");
+      return 1;
+    }
+
+  /* Set output mute. */
+
+  if (board_external_amp_mute_control(true) != OK)
+    {
+      printf("Error: board_external_amp_mute_control(true) failuer.\n");
+      return 1;
+    }
+
+  printf("Stop  AudioBeep example\n");
+
+  /* Set I/O parameters for power off. */
+
+  if (!app_power_off())
+    {
+      printf("Error: app_power_off() failure.\n");
+      return 1;
+    }
+
+  printf("Exit  AudioBeep example\n");
+
+  return 0;
+}
+//}
+
+
+=== APS学習基板GPIO初期化
+
+
+
+=== SpresenseメインボードLED操作
+
+=== examples/sixaxisサンプルプログラム流用部分
+
+=== 角速度-角度算出
+
+=== ビープ音再生
 
 
 == Tips
