@@ -276,11 +276,117 @@ extern "C" int audio_beep_destroy(void) {
 //}
 
 
-=== APS学習基板GPIO初期化
+=== APS学習基板GPIO操作
+エレキギターのAPS学習ボードはつぎの動作で使います。
+
+ * SW1押下中にドレミのビープ音を発音する
+ * SW1とSW2同時押下で終了する
+
+SW1はポーリングによるGPIO読み出し、SW2は割り込みを使いました。
+
+対象ソースコードはつぎになります。
+
+ * /Users/ユーザー名/spresense/spresense_game-main/electric_guitar/electric_guitar_gpio.c
+
+@<list>{electric_guitar_gpio_switch_2_handler_list}はSW2割り込みハンドラです。
+SW1とSW2押下が検出できたら終了を意味する変数を設定します。
+
+//listnum[electric_guitar_gpio_switch_2_handler_list][SW2割り込みハンドラ]{
+static int electric_guitar_gpio_switch_2_handler(int irq, FAR void *context, FAR void *arg)
+{
+  int sw2_status = board_gpio_read(SWITCH_2);
+  int sw1_status = board_gpio_read(SWITCH_1);
+
+  if (!sw1_status && !sw2_status) exit_electric_guitar = true;
+
+  return 0;
+}
+//}
+
+@<list>{electric_guitar_gpio_create_list}はGPIO初期化です。
+SW1はプルアップ・入力ポートとして設定しています。
+SW2は立ち下がりエッジ割り込み、割り込みハンドラ登録、割り込みを有効しています。
+
+//listnum[electric_guitar_gpio_create_list][GPIO初期化]{
+void electric_guitar_gpio_create(void)
+{
+  board_gpio_config(SWITCH_1, 0, true, false, PIN_PULLUP);
+
+  /* 割り込み設定 */
+  board_gpio_intconfig(SWITCH_2, INT_FALLING_EDGE,    true, electric_guitar_gpio_switch_2_handler); 
+
+  if (board_gpio_int(SWITCH_2, true) < 0) {
+    message("gpio_create board_gpio_int(switch_2) failure.\n");
+  }  
+
+  return;
+}
+//}
+
+
+@<list>{electric_guitar_gpio_destroy_list}はGPIO終了処理です。
+SW2割り込みを無効にします。
+
+//listnum[electric_guitar_gpio_destroy_list][GPIO終了]{
+void electric_guitar_gpio_destroy(void)
+{
+  if (board_gpio_int(SWITCH_2, false) < 0) {
+    message("gpio_destroy board_gpio_int(switch_2) failure.\n");
+  }  
+
+  return;
+}
+//}
+
+
+=== SpresenseメインボードLED初期化
+エレキギターではドレミの発音に合わせてSpresenseメインボード上のLED0〜3を点灯・消灯します。
+LED点灯・消灯パターンはつぎのとおりです。
+
+ * ドの発音: LED0を点灯
+ * レの発音: LED1を点灯
+ * ミの発音: LED2を点灯
+ * その他: LED0, 1, 2, 3を点灯
+
+
+@<list>{spresense_main_board_led_list}はSpresenseメインボードLED初期化のコードです。
+SpresenseメインボードLED0〜3を出力に設定し、消灯しています。
+
+PIN_LED*マクロの定義はつぎのファイルに定義されています。
+
+ * /Users/ユーザー名/spresense/nuttx/arch/arm/include/cxd56xx/pin.h
 
 
 
-=== SpresenseメインボードLED操作
+//listnum[spresense_main_board_led_list][SpresenseメインボードLED初期化]{
+
+#define PIN_LED0  (PIN_I2S1_BCK)
+#define PIN_LED1  (PIN_I2S1_LRCK)
+#define PIN_LED2  (PIN_I2S1_DATA_IN)
+#define PIN_LED3  (PIN_I2S1_DATA_OUT)
+
+const int spresense_main_board_led_pin[4] = {
+  PIN_LED0,
+  PIN_LED1,
+  PIN_LED2,
+  PIN_LED3
+};
+
+#define SPRESENSE_MAIN_BOARD_LED_TURN_ON    (1)
+#define SPRESENSE_MAIN_BOARD_LED_TURN_OFF   (0)
+
+int main(int argc, FAR char *argv[])
+{
+  // 省略
+
+  for (int i = 0; i < 4; i++) {
+    board_gpio_config(spresense_main_board_led_pin[i], 0, true, true, PIN_FLOAT);
+    board_gpio_write(spresense_main_board_led_pin[i], SPRESENSE_MAIN_BOARD_LED_TURN_OFF);
+  }
+
+}
+//}
+
 
 === examples/sixaxisサンプルプログラム流用部分
 
