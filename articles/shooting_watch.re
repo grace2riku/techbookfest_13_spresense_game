@@ -83,7 +83,7 @@ Shooting count = 70
  * 連射測定中待機
  * SW1割り込みハンドラ（SW1押下回数測定）
  * SW2割り込みハンドラ（ゲーム開始判定・ゲーム終了判定）
- * GPIO終了処理（割り込み無効化）
+ * GPIO終了処理（割り込み禁止）
 
 === main関数
 対象ソースコードファイル名はshooting_watch_main.cです。
@@ -198,8 +198,8 @@ void shooting_watch_gpio_create(void)
 その後はSW2が押下されるまで待ちます。
 
 SW2が押下されるとSW2割り込みハンドラでnext_stateがtrueになります。
-メインループでnext_state == trueを検出できたらSW2割り込みを無効にしたのち連射準備状態に遷移します。
-SW2を割り込み無効にするのは連射測定中にSW2の割り込みが発生しSW1押下の連射測定を邪魔したくないからです。
+メインループでnext_state == trueを検出できたらSW2割り込みを禁止にしたのち連射準備状態に遷移します。
+SW2を割り込み禁止にするのは連射測定中にSW2の割り込みが発生しSW1押下の連射測定を邪魔したくないからです。
 
 //listnum[main_stop_list][main関数 停止状態]{
 int main(int argc, FAR char *argv[])
@@ -404,11 +404,11 @@ static int shooting_watch_gpio_switch_2_handler(int irq, FAR void *context, FAR 
 //}
 
 
-=== GPIO終了処理（割り込み無効化）
+=== GPIO終了処理（割り込み禁止）
 @<list>{shooting_watch_gpio_destroy_list}はGPIO終了処理です。
-SW1とSW2の割り込み無効にします。
+SW1とSW2の割り込み禁止にします。
 
-//listnum[shooting_watch_gpio_destroy_list][GPIO終了処理（割り込み無効化）]{
+//listnum[shooting_watch_gpio_destroy_list][GPIO終了処理（割り込み禁止）]{
 void shooting_watch_gpio_destroy(void)
 {
   if (board_gpio_int(SWITCH_1, false) < 0) { 
@@ -422,10 +422,6 @@ void shooting_watch_gpio_destroy(void)
   return;
 }
 //}
-
-
-== Tips
-
 
 == 課題
 === 連射測定残り時間がわかりにくい

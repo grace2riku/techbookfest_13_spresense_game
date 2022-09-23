@@ -119,7 +119,7 @@ Spresense拡張ボードに接続します。椅子取りゲームと同じ汎�
  * SpresenseメインボードLED操作
  * examples/sixaxisサンプルプログラム流用部分
  * 角速度-角度算出
- * ビープ音再生
+ * 角度指定でビープ音再生
 
 === examples/audio_beepサンプルプログラム流用部分
 エレキギターはBMI160の傾きによりドレミのビープ音を発音します。
@@ -325,7 +325,7 @@ void electric_guitar_gpio_create(void)
 
 
 @<list>{electric_guitar_gpio_destroy_list}はGPIO終了処理です。
-SW2割り込みを無効にします。
+SW2割り込みを禁止にします。
 
 //listnum[electric_guitar_gpio_destroy_list][GPIO終了]{
 void electric_guitar_gpio_destroy(void)
@@ -343,11 +343,10 @@ void electric_guitar_gpio_destroy(void)
 エレキギターではドレミの発音に合わせてSpresenseメインボード上のLED0〜3を点灯・消灯します。
 LED点灯・消灯パターンはつぎのとおりです。
 
- * ドの発音: LED0を点灯
- * レの発音: LED1を点灯
- * ミの発音: LED2を点灯
- * その他: LED0, 1, 2, 3を点灯
-
+ * ドの発音（0°以上20°未満）  : LED0を点灯
+ * レの発音（35°以上55°未満） : LED1を点灯
+ * ミの発音（70°以上90°未満） : LED2を点灯
+ * ドレミ発音以外            : LED0, 1, 2, 3を点灯
 
 @<list>{spresense_main_board_led_list}はSpresenseメインボードLED初期化のコードです。
 SpresenseメインボードLED0〜3を出力に設定し、消灯しています。
@@ -356,7 +355,9 @@ PIN_LED*マクロの定義はつぎのファイルに定義されています。
 
  * /Users/ユーザー名/spresense/nuttx/arch/arm/include/cxd56xx/pin.h
 
-
+Webドキュメント
+@<href>{https://developer.sony.com/ja/develop/spresense/developer-tools/get-started-using-nuttx/nuttx-developer-guide#_pin_specification,11.2.3. Pin specification}
+の表 3. SDK が制御できるピンのリストにLED0〜3のピン配置が書いてあります。
 
 //listnum[spresense_main_board_led_list][SpresenseメインボードLED初期化]{
 
@@ -389,13 +390,339 @@ int main(int argc, FAR char *argv[])
 
 
 === examples/sixaxisサンプルプログラム流用部分
+BMI160（3軸加速度・3軸ジャイロ）から加速度・角速度を取得するサンプルプログラムがexamples/sixaxisです。
+examples/sixaxisはI2CでBMI160から加速度・角速度を取得し、シリアル通信で送信を繰り返します。
+エレキギターでは角速度から角度を算出しています。
+BMI160から加速度・角速度を取得する一連のロジックを流用しました。
+BMI160を抽象化しファイルとして扱います。
+@<list>{examples_sixaxis_list}がコードです。
+
+//listnum[examples_sixaxis_list][examples/sixaxisサンプルプログラム流用部分抜粋]{
+#define ACC_DEVPATH      "/dev/accel0"
+
+int main(int argc, FAR char *argv[])
+{
+  int fd;
+  struct accel_gyro_st_s data;
+
+  fd = open(ACC_DEVPATH, O_RDONLY);
+  if (fd < 0) {
+      printf("Device %s open failure. %d\n", ACC_DEVPATH, fd);
+      return -1;
+  }
+
+  for (; ; ) {
+      int ret;
+
+      ret = read(fd, &data, sizeof(struct accel_gyro_st_s));
+      if (ret != sizeof(struct accel_gyro_st_s)) {
+          fprintf(stderr, "Read failed.\n");
+          break;
+      }
+
+      /* If sensing time has been changed, show 6 axis data. */
+      if (prev != data.sensor_time) {
+
+          ++print_display_count;
+          if (print_display_count >= 100) {
+            print_display_count = 0;
+
+            printf("\033[2J");  // 画面クリア
+            printf("\033[%d;%dH", 0, 0);  // 移動 高さ, 横
+
+            printf("----- If you tilt the board while pressing SW1, you will hear a do-re-mi sound.-----\n");
+            printf("----- Press SW1 and SW2 to end the game.-----\n");
+
+            printf("[%" PRIu32 "] %d, %d, %d / %d, %d, %d\n",
+                  data.sensor_time,
+                  data.gyro.x, data.gyro.y, data.gyro.z,
+                  data.accel.x, data.accel.y, data.accel.z);
+
+            fflush(stdout);
+          }
+
+      }
+
+      usleep(10000);
+
+      if (exit_electric_guitar) break;
+  }
+
+  close(fd);
+
+  return 0;
+}
+//}
+
+==== open
+openでBMI160にアクセスするためのファイルハンドルを取得しています。
+この後のreadで取得したファイルハンドルでアクセスします。
+
+==== read
+read実行でBMI160から構造体accel_gyro_st_sのデータを読み込みます。
+readのコードを追うとつぎの処理を実行していました。
+
+ * /Users/ユーザー名/spresense/nuttx/drivers/sensors/bmi160.c bmi160_read関数
+
+bmi160_read関数の中をみると@<list>{bmi160_read_bmi160_getregs_list}のコードでBMI160のレジスタ（BMI160_DATA_8）から15バイト読み出していました。
+
+//list[bmi160_read_bmi160_getregs_list][加速度・角速度取得]{
+  bmi160_getregs(priv, BMI160_DATA_8, (FAR uint8_t *)buffer, 15);
+//}
+
+レジスタ（BMI160_DATA_8）の定義を確認すると0x0Cでした。
+@<hd>{reference_material|BMI160 Datasheet}のp49 Figure 20: BMI160 register mapに記載があります。
+レジスタアドレス0x0C〜0x1Aまでの15バイトはつぎのデータです。
+
+ * 0x0C, 0x0D: gyr_x_7_0, gyr_x_15_8 ジャイロセンサx軸 16bit
+ * 0x0E, 0x0F: gyr_y_7_0, gyr_y_15_8 ジャイロセンサy軸 16bit
+ * 0x10, 0x11: gyr_z_7_0, gyr_z_15_8 ジャイロセンサz軸 16bit
+ * 0x12, 0x13: acc_x_7_0, acc_x_15_8 加速度センサx軸 16bit
+ * 0x14, 0x15: acc_y_7_0, acc_y_15_8 加速度センサy軸 16bit
+ * 0x16, 0x17: acc_z_7_0, acc_z_15_8 加速度センサz軸 16bit
+ * 0x18, 0x19, 0x1A: sensor_time_7_0, sensor_time_15_8, sensor_time_23_16 センサータイム 24bit
+
+BMI160 Datasheetのレジスタマップと@<list>{examples_sixaxis_list}のreadで使っている構造体（accel_gyro_st_s）メンバの定義が一致していました。
+
+構造体はつぎのファイルに定義されています。
+
+ * /Users/ユーザー名/spresense/nuttx/include/nuttx/sensors/bmi160.h
+
+//list[bmi160.h_list][構造体（accel_gyro_st_s）定義]{
+struct accel_t
+{
+  int16_t x;
+  int16_t y;
+  int16_t z;
+};
+
+struct gyro_t
+{
+  int16_t x;
+  int16_t y;
+  int16_t z;
+};
+
+struct accel_gyro_st_s
+{
+  struct gyro_t  gyro;
+  struct accel_t accel;
+  uint32_t sensor_time;
+};
+//}
+
+==== close
+openで取得したファイルハンドルをクローズします。
+
 
 === 角速度-角度算出
+BMI160から取得した角速度から角度を算出します。
+角速度を積分し角度を算出しています。
+つぎを参考にさせていただき実装してみました。
 
-=== ビープ音再生
+ * @<hd>{reference_material|ジャイロ（角速度）から角度の算出方法}
+ * @<hd>{reference_material|BMI160サンプルプログラム}
+
+@<list>{calc_degree_list}がコードです。
+
+//listnum[calc_degree_list][角速度-角度算出部分抜粋]{
+int main(int argc, FAR char *argv[])
+{
+  int fd;
+  struct accel_gyro_st_s data;
+  uint32_t prev;
+
+  volatile float dt;
+  volatile float degree_x, degree_y, degree_z;
+  volatile float gx, gy, gz;
+  volatile float pre_gx, pre_gy, pre_gz;
+  int print_display_count;
 
 
-== Tips
+  fd = open(ACC_DEVPATH, O_RDONLY);
+  if (fd < 0) {
+      printf("Device %s open failure. %d\n", ACC_DEVPATH, fd);
+      return -1;
+  }
+
+  prev = 0;
+  degree_x = degree_y = degree_z = 0;
+  dt = 0;
+  pre_gx = pre_gy = pre_gz = 0;
+  print_display_count = 0;
+
+  for (; ; ) {
+      int ret;
+
+      ret = read(fd, &data, sizeof(struct accel_gyro_st_s));
+      if (ret != sizeof(struct accel_gyro_st_s)) {
+          fprintf(stderr, "Read failed.\n");
+          break;
+      }
+
+
+      /* If sensing time has been changed, show 6 axis data. */
+      if (prev != data.sensor_time) {
+          dt = (abs(data.sensor_time - prev) * 10) / 1000.0;
+          prev = data.sensor_time;
+
+          gx = convertRawGyro(data.gyro.x);
+          gy = convertRawGyro(data.gyro.y);
+          gz = convertRawGyro(data.gyro.z);
+
+          degree_x += (pre_gx + gx) * dt / 2;
+          degree_y += (pre_gy + gy) * dt / 2;
+          degree_z += (pre_gz + gz) * dt / 2;
+
+          degree_x = fmodf(degree_x, 360.0);
+          degree_y = fmodf(degree_y, 360.0);
+          degree_z = fmodf(degree_z, 360.0);
+
+          pre_gx = gx;
+          pre_gy = gy;
+          pre_gz = gz;
+
+          ++print_display_count;
+          if (print_display_count >= 100) {
+            print_display_count = 0;
+
+            printf("\033[2J");  // 画面クリア
+            printf("\033[%d;%dH", 0, 0);  // 移動 高さ, 横
+
+            printf("----- If you tilt the board while pressing SW1, you will hear a do-re-mi sound.-----\n");
+            printf("----- Press SW1 and SW2 to end the game.-----\n");
+
+            printf("[%" PRIu32 "] %d, %d, %d / %d, %d, %d\n",
+                  data.sensor_time,
+                  data.gyro.x, data.gyro.y, data.gyro.z,
+                  data.accel.x, data.accel.y, data.accel.z);
+
+            printf("dt=%f, gx=%f, gy=%f, gz=%f, deg(x)=%f, deg(y)=%f, deg(z)=%f\n", 
+              dt, gx, gy, gz,
+              degree_x, degree_y, degree_z);
+
+            fflush(stdout);
+          }
+
+      }
+
+      usleep(10000);
+
+      play(fabsf(degree_z));
+
+      if (exit_electric_guitar) break;
+  }
+
+  exit_electric_guitar = false;
+
+  close(fd);
+
+
+  return 0;
+}
+//}
+
+play関数が角度に応じてドレミのビープ音を発音する関数です。
+この関数にはz軸の角度のみを引数に指定しています。
+これは今回の@<hd>{SPRESENSE用3軸加速度・3軸ジャイロ・気圧・温度センサ アドオンボード}の取り付け位置、
+基板を傾ける方向・角度でジャイロのz軸が変化していることが実験でわかったためです。
+
+@<img>{アドオンボード取り付け位置}はアドオンボードのz軸を明示した写真です。
+//image[アドオンボード取り付け位置][z軸の定義]{ 
+//}
+
+実装が完了したらBMI160から取得した角速度、算出した角度を確認します。
+BMI160から取得した角速度、算出した角度はシリアル送信しログをシリアルターミナルで可視化します。
+確認しやすいようにつぎのようにしました。
+
+ * ログが複数行になると確認しづらいと思ったので1セットのログごとに画面クリアし表示する
+ * ログが高速に出力し続けると確認しづらいと思ったので1秒ごとにログを表示する
+
+
+=== 角度指定でビープ音再生
+@<list>{play_list}は引数に設定した角度でドレミを発音するコードです。
+SW1が押下且つつぎの角度が設定されたときにドレミを発音します。
+またドレミの発音によりLED0〜LED2のいずれかが点灯します。
+
+ * 0°以上20°未満: ドと発音（LED0点灯）
+ * 35°以上55°未満: レと発音（LED1点灯）
+ * 70°以上90°未満: ミと発音（LED2点灯）
+
+
+//listnum[play_list][角度指定でビープ音再生]{
+#define SPRESENSE_MAIN_BOARD_LED_TURN_ON    (1)
+#define SPRESENSE_MAIN_BOARD_LED_TURN_OFF   (0)
+
+#define BEEP_FREQUENCY_DO (262)
+#define BEEP_FREQUENCY_RE (294)
+#define BEEP_FREQUENCY_MI (330)
+#define BEEP_NONE         (0)
+
+void play(float degree) {
+  int i = 0;
+  int sw1_status = board_gpio_read(SWITCH_1);  
+
+  if (!sw1_status) {
+    if (0 <= degree && degree < 20) {
+      if (audio_beep(BEEP_FREQUENCY_DO) != 0) {
+        printf("audio_beep(BEEP_FREQUENCY_DO) failure.\n");
+      }
+
+      board_gpio_write(PIN_LED0, SPRESENSE_MAIN_BOARD_LED_TURN_ON);
+      board_gpio_write(PIN_LED1, SPRESENSE_MAIN_BOARD_LED_TURN_OFF);
+      board_gpio_write(PIN_LED2, SPRESENSE_MAIN_BOARD_LED_TURN_OFF);
+      board_gpio_write(PIN_LED3, SPRESENSE_MAIN_BOARD_LED_TURN_OFF);
+    } else if (35 <= degree && degree < 55) {
+      if (audio_beep(BEEP_FREQUENCY_RE) != 0) {
+        printf("audio_beep(BEEP_FREQUENCY_RE) failure.\n");
+      }
+
+      board_gpio_write(PIN_LED0, SPRESENSE_MAIN_BOARD_LED_TURN_OFF);
+      board_gpio_write(PIN_LED1, SPRESENSE_MAIN_BOARD_LED_TURN_ON);
+      board_gpio_write(PIN_LED2, SPRESENSE_MAIN_BOARD_LED_TURN_OFF);
+      board_gpio_write(PIN_LED3, SPRESENSE_MAIN_BOARD_LED_TURN_OFF);
+    } else if (70 <= degree && degree < 90) {
+      if (audio_beep(BEEP_FREQUENCY_MI) != 0) {
+        printf("audio_beep(BEEP_FREQUENCY_MI) failure.\n");
+      }
+
+      board_gpio_write(PIN_LED0, SPRESENSE_MAIN_BOARD_LED_TURN_OFF);
+      board_gpio_write(PIN_LED1, SPRESENSE_MAIN_BOARD_LED_TURN_OFF);
+      board_gpio_write(PIN_LED2, SPRESENSE_MAIN_BOARD_LED_TURN_ON);
+      board_gpio_write(PIN_LED3, SPRESENSE_MAIN_BOARD_LED_TURN_OFF);
+    } else {
+      for (i = 0; i < 4; i++) {
+        board_gpio_write(spresense_main_board_led_pin[i], SPRESENSE_MAIN_BOARD_LED_TURN_ON);
+      }
+    }
+  } else {
+    if (audio_beep(BEEP_NONE) != 0) {
+      printf("audio_beep(NONE) failure.\n");
+    }
+    for (i = 0; i < 4; i++) {
+      board_gpio_write(spresense_main_board_led_pin[i], SPRESENSE_MAIN_BOARD_LED_TURN_OFF);
+    }
+  }
+}
+//}
+
+ドレミの発音はシンプルでaudio_beep関数をドレミの周波数を引数に設定し呼び出します。
+
+ドレミの周波数（Hz）は@<list>{beep_frequency_list}のとおりです。
+
+//listnum[beep_frequency_list][ドレミの周波数]{
+#define BEEP_FREQUENCY_DO (262) // ドを発音
+#define BEEP_FREQUENCY_RE (294) // レを発音
+#define BEEP_FREQUENCY_MI (330) // ミを発音
+#define BEEP_NONE         (0)   // 発音なし
+//}
+
 
 == 課題
+現状のエレキギターの課題です。
+
+=== 基板の位置によってはドレミの発音ができない
+プログラム実行後にドレミ発音するであろう角度に基板を傾けますがドレミが発音しなくなります。
+現状、解決策はなくこのモードに入ったらリセットしています。
+致命的な不具合なので解決が必要と考えています。
 
