@@ -306,7 +306,7 @@ static int app_play_player(void)
 
 === 任意時間の再生について
 examples/audio_playerは10秒間の音楽ファイル再生ですが、椅子取りゲームでは任意の長さで再生できるように変更しています。
-任意の長さは@<list>{music_play_time_list}のように再生開始する時に3秒〜10秒の間で乱数により指定しています。
+任意の長さは@<list>{music_play_time_list}のように再生開始する時に3秒〜11秒の間で乱数により指定しています。
 
 //listnum[music_play_time_list][任意時間の指定]{
         case PLAY:
@@ -523,7 +523,7 @@ https://developer.sony.com/develop/spresense/docs/sdk_developer_guide_ja.html#_a
 
 一時停止の場合は次回の再生時に音楽ファイルの続きから再生したいです。
 そのため@<list>{pause_list}では通常停止のAS_STOPPLAYER_NORMALを指定しています。
-通常停止は停止要求のタイミングでFIFOの中身は残っている状態できるだけ早く停止します。
+通常停止は停止要求のタイミングでFIFOの中身は残っている状態でできるだけ早く停止します。
 対してES終端停止（AS_STOPPLAYER_ESEND）は、停止要求時点でFIFOに入っているデータをすべて発音してから停止します。
 
 
@@ -610,15 +610,12 @@ GPIO初期化は@<list>{gpio_create_list}です。
  * 割り込み設定（対象ピン、割り込みエッジ、割り込みハンドラの登録）
  * 割り込み有効化
 
-
-===== 割り込み設定
-
 //listnum[gpio_create_list][GPIO初期化]{
 void gpio_create(void)
 {
   /* 割り込み設定 */
-  board_gpio_intconfig(SWITCH_1, INT_BOTH_EDGE,    true, gpio_switch_1_handler); 
-  board_gpio_intconfig(SWITCH_2, INT_BOTH_EDGE,    true, gpio_switch_2_handler); 
+  board_gpio_intconfig(SWITCH_1, INT_BOTH_EDGE, true, gpio_switch_1_handler); 
+  board_gpio_intconfig(SWITCH_2, INT_BOTH_EDGE, true, gpio_switch_2_handler); 
 
   if (board_gpio_int(SWITCH_1, true) < 0) { 
     message("gpio_create board_gpio_int(switch_1) failure.\n");
@@ -632,13 +629,17 @@ void gpio_create(void)
 }
 //}
 
+
+==== 割り込み設定
+
 割り込み設定は@<list>{board_gpio_intconfig_list}です。
 
 //listnum[board_gpio_intconfig_list][gpio_create関数]{
-  board_gpio_intconfig(SWITCH_1, INT_BOTH_EDGE,    true, gpio_switch_1_handler); 
+  board_gpio_intconfig(SWITCH_1, INT_BOTH_EDGE, true, gpio_switch_1_handler); 
 //}
 
 この場合はつぎの設定をしています。
+
  * APS学習ボードSW1 （SWITCH_1 == 39ピン）を対象とする
  * 割り込みは立ち上がり・立ち下がりの両エッジ
  * フィルタをON
@@ -649,7 +650,8 @@ APIリファレンスはこちらのリンクです。
  * @<href>{https://developer.sony.com/develop/spresense/developer-tools/api-reference/api-references-spresense-sdk/group__gpioif.html,GPIO Interface driver}
 
 
-===== 割り込み有効化
+==== 割り込み有効化
+
 割り込み有効化は@<list>{board_gpio_int_list}です。
 
 //listnum[board_gpio_int_list][board_gpio_int関数]{
@@ -663,7 +665,9 @@ SW1の割り込みを有効にしています。
 
 ==== 割り込みハンドラ
 @<list>{gpio_int_handler_list}のコードです。
+
 SW1両エッジ検出時の割り込みハンドラがgpio_switch_1_handlerです。
+
 SW2両エッジ検出時の割り込みハンドラがgpio_switch_2_handlerです。
 
 割り込みハンドラではSW1、SW2の読み込みに加えてAPS学習ボードのUSER_LED1、USER_LED2の2つのLEDをSW1のレベルで点灯・消灯しています。
@@ -732,8 +736,8 @@ void gpio_destroy(void)
 == Tips
 === プログラム終了時に割り込み禁止にする必要性について
 Spresenseでアプリケーションを作り技術書を書くのは今回で2回目です。
-今回を本を書く過程で過去に書いた本では気づかなかったことに気づいたので共有させてください。
-すでにご存じことかもしれませんが見てくださるとありがたいです。
+今回本を書く過程で過去の本では気づかなかったことに気づいたので共有させてください。
+すでにご存じかもしれませんが見てくださるとありがたいです。
 
 アプリケーション終了時に@<hd>{GPIO後処理}で割り込みを禁止しています。
 もし割り込み禁止せずに終了した場合、アプリケーションが動いていないのにSW1またはSW2を押下すると割り込みハンドラが動きます。
@@ -751,7 +755,7 @@ Spresenseでアプリケーションを作り技術書を書くのは今回で2�
 
 OS動作のもと再びアプリケーションが実行可能な環境の場合は
 
- * アプリケーション終了後も異常な動作をしないように終了処理をしっかりする
+ * アプリケーション終了後も異常な動作をしない（他のアプリケーションの実行に影響を与えない）ように終了処理をしっかりする
 
 ということを今回学びました。
 
@@ -778,6 +782,6 @@ OS動作のもと再びアプリケーションが実行可能な環境の場合
 音量を調節する機能は必要そうです。
 
 === 選曲機能
-選曲がないため1ファイル固定再生となります。
-1曲固定再生だと飽きてしまうため改善が必要だと考えています。
+選曲ができないため1ファイルの固定再生となります。
+1曲のみ固定再生だと飽きてしまうため改善が必要だと考えています。
 

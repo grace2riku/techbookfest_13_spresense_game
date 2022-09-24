@@ -21,6 +21,12 @@ Spresenseには各種機能拡張用ボードが各社から販売されてい�
 
 
 == プレイ画面
+エレキギターを実行しているときの動画です。
+
+ * @<href>{https://youtube.com/shorts/mzNJ5q6-Ij4,エレキギター実行中の動画}
+
+以降にゲーム実行開始からの手順を書きます。
+
 シェルに接続し、連射測定ゲームのアプリ名（electric_guitar）を入力します。
 連射測定ゲームのバイナリはSDカードに格納しています。
 つぎのコマンドでSDカードの中身を確認します。
@@ -57,6 +63,7 @@ dt=0.020000, gx=-45.593262, gy=60.424805, gz=17.456055, deg(x)=-7.868042, deg(y)
 //}
 
 はじめの2行はつぎの内容です。
+
  * SW1押下し傾けるとド・レ・ミと発音すること
  * SW1とSW2押下で終了すること
 
@@ -76,8 +83,6 @@ BMI160が接続されているSpresenseメインボードの傾きをつぎに�
  * 0°以上20°未満: ドと発音
  * 35°以上55°未満: レと発音
  * 70°以上90°未満: ミと発音
-
-動画はこちらの@<href>{https://youtube.com/shorts/mzNJ5q6-Ij4?feature=share,【リンク】}です。
 
 SW1・SW2を同時に押下するとつぎのメッセージを表示し終了します。
 //cmd{
@@ -239,7 +244,7 @@ static bool app_beep(bool en = false, int16_t vol = 255, uint16_t freq = 0)
 ==== ビープ音終了処理
 @<list>{audio_beep_destroy_list}はビープ音終了のコードです。
 examples/audio_beepサンプルプログラムのaudio_beep_main.cxxのmain関数に終了処理が書いてあります。
-その初期化コードをaudio_beep_destroy_list関数でラップし、エレキギターアプリケーションから呼び出すようにしました。
+その初期化コードをaudio_beep_destroy関数でラップし、エレキギターアプリケーションから呼び出すようにしました。
 
 //listnum[audio_beep_destroy_list][ビープ音終了処理]{
 extern "C" int audio_beep_destroy(void) {
@@ -456,7 +461,7 @@ int main(int argc, FAR char *argv[])
 
 ==== open
 openでBMI160にアクセスするためのファイルハンドルを取得しています。
-この後のreadで取得したファイルハンドルでアクセスします。
+この後のreadで取得したファイルハンドルでBMI160にアクセスします。
 
 ==== read
 read実行でBMI160から構造体accel_gyro_st_sのデータを読み込みます。
