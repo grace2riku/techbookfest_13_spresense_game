@@ -50,8 +50,8 @@ state:play goto pause state.
 音楽ファイルの最後まで再生⇄一時停止を繰り返します。
 //cmd{
 state:pause goto play state.
-Attention: module[11][0] attention id[1]/code[20] (components/decoder/decoder_component.cpp L511)
-Attention!! components/decoder/dAttention: module[11][0] attention id[1]/code[20] (components/decoder/decoder_component.cpp L511)
+@<seqsplit>{Attention: module[11][0] attention id[1]/code[20] (components/decoder/decoder_component.cpp L511)}
+@<seqsplit>{Attention!! components/decoder/dAttention: module[11][0] attention id[1]/code[20] (components/decoder/decoder_component.cpp L511)}
 ecoder_comp L511 ecode 1 subcode 20
 Attention!! components/decoder/decoder_comp L511 ecode 1 subcode 20
 //}

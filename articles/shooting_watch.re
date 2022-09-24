@@ -110,7 +110,7 @@ int main(int argc, FAR char *argv[])
     switch (game_state) {
     case STOP:
       if (one_time_counter == 0) {
-        printf("----- Press SW2 to start the game. When the game starts, shoot SW1 continuously.-----\n");
+@<seqsplit>{        printf("----- Press SW2 to start the game. When the game starts, shoot SW1 continuously.-----\n");}
         printf("----- Press SW1 and SW2 to end the game.-----\n");
         one_time_counter = 1;
 
@@ -182,8 +182,8 @@ SW1押下の回数を測定したいため割り込みは立ち下がりエッ�
 void shooting_watch_gpio_create(void)
 {
   /* 割り込み設定 */
-  board_gpio_intconfig(SWITCH_1, INT_FALLING_EDGE,    true, shooting_watch_gpio_switch_1_handler); 
-  board_gpio_intconfig(SWITCH_2, INT_FALLING_EDGE,    true, shooting_watch_gpio_switch_2_handler); 
+@<seqsplit>{  board_gpio_intconfig(SWITCH_1, INT_FALLING_EDGE,    true, shooting_watch_gpio_switch_1_handler);}
+@<seqsplit>{  board_gpio_intconfig(SWITCH_2, INT_FALLING_EDGE,    true, shooting_watch_gpio_switch_2_handler);}
 
   if (board_gpio_int(SWITCH_1, true) < 0) { 
     message("gpio_create board_gpio_int(switch_1) failure.\n");
@@ -216,7 +216,7 @@ int main(int argc, FAR char *argv[])
     switch (game_state) {
     case STOP:
       if (one_time_counter == 0) {
-        printf("----- Press SW2 to start the game. When the game starts, shoot SW1 continuously.-----\n");
+@<seqsplit>{        printf("----- Press SW2 to start the game. When the game starts, shoot SW1 continuously.-----\n");}
         printf("----- Press SW1 and SW2 to end the game.-----\n");
         one_time_counter = 1;
 
@@ -373,7 +373,7 @@ bool next_state = false;
 
 extern u_long shooting_count;
 
-static int shooting_watch_gpio_switch_1_handler(int irq, FAR void *context, FAR void *arg)
+@<seqsplit>{static int shooting_watch_gpio_switch_1_handler(int irq, FAR void *context, FAR void *arg)}
 {
   ++shooting_count;
 
@@ -397,7 +397,7 @@ bool next_state = false;
 extern u_long shooting_count;
 
 
-static int shooting_watch_gpio_switch_2_handler(int irq, FAR void *context, FAR void *arg)
+@<seqsplit>{static int shooting_watch_gpio_switch_2_handler(int irq, FAR void *context, FAR void *arg)}
 {
   int sw2_status = board_gpio_read(SWITCH_2);
   int sw1_status = board_gpio_read(SWITCH_1);

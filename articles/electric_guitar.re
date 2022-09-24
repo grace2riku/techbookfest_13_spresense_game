@@ -59,7 +59,7 @@ nsh> /mnt/sd0/electric_guitar
 ----- If you tilt the board while pressing SW1, you will hear a do-re-mi sound.-----
 ----- Press SW1 and SW2 to end the game.-----
 [16674] -747, 990, 286 / -13850, -470, 10578
-dt=0.020000, gx=-45.593262, gy=60.424805, gz=17.456055, deg(x)=-7.868042, deg(y)=40.745850, deg(z)=-80.649109
+@<seqsplit>{dt=0.020000, gx=-45.593262, gy=60.424805, gz=17.456055, deg(x)=-7.868042, deg(y)=40.745850, deg(z)=-80.649109}
 //}
 
 はじめの2行はつぎの内容です。
@@ -297,7 +297,7 @@ SW1はポーリングによるGPIO読み出し、SW2は割り込みを使いま�
 SW1とSW2押下が検出できたら終了を意味する変数を設定します。
 
 //listnum[electric_guitar_gpio_switch_2_handler_list][SW2割り込みハンドラ]{
-static int electric_guitar_gpio_switch_2_handler(int irq, FAR void *context, FAR void *arg)
+@<seqsplit>{static int electric_guitar_gpio_switch_2_handler(int irq, FAR void *context, FAR void *arg)}
 {
   int sw2_status = board_gpio_read(SWITCH_2);
   int sw1_status = board_gpio_read(SWITCH_1);
@@ -318,7 +318,7 @@ void electric_guitar_gpio_create(void)
   board_gpio_config(SWITCH_1, 0, true, false, PIN_PULLUP);
 
   /* 割り込み設定 */
-  board_gpio_intconfig(SWITCH_2, INT_FALLING_EDGE,    true, electric_guitar_gpio_switch_2_handler); 
+@<seqsplit>{  board_gpio_intconfig(SWITCH_2, INT_FALLING_EDGE,    true, electric_guitar_gpio_switch_2_handler);}
 
   if (board_gpio_int(SWITCH_2, true) < 0) {
     message("gpio_create board_gpio_int(switch_2) failure.\n");
@@ -386,8 +386,8 @@ int main(int argc, FAR char *argv[])
   // 省略
 
   for (int i = 0; i < 4; i++) {
-    board_gpio_config(spresense_main_board_led_pin[i], 0, true, true, PIN_FLOAT);
-    board_gpio_write(spresense_main_board_led_pin[i], SPRESENSE_MAIN_BOARD_LED_TURN_OFF);
+@<seqsplit>{    board_gpio_config(spresense_main_board_led_pin[i], 0, true, true, PIN_FLOAT);}
+@<seqsplit>{    board_gpio_write(spresense_main_board_led_pin[i], SPRESENSE_MAIN_BOARD_LED_TURN_OFF);}
   }
 
 }
@@ -435,7 +435,7 @@ int main(int argc, FAR char *argv[])
             printf("\033[2J");  // 画面クリア
             printf("\033[%d;%dH", 0, 0);  // 移動 高さ, 横
 
-            printf("----- If you tilt the board while pressing SW1, you will hear a do-re-mi sound.-----\n");
+@<seqsplit>{            printf("----- If you tilt the board while pressing SW1, you will hear a do-re-mi sound.-----\n");}
             printf("----- Press SW1 and SW2 to end the game.-----\n");
 
             printf("[%" PRIu32 "] %d, %d, %d / %d, %d, %d\n",
@@ -594,7 +594,7 @@ int main(int argc, FAR char *argv[])
             printf("\033[2J");  // 画面クリア
             printf("\033[%d;%dH", 0, 0);  // 移動 高さ, 横
 
-            printf("----- If you tilt the board while pressing SW1, you will hear a do-re-mi sound.-----\n");
+ @<seqsplit>{           printf("----- If you tilt the board while pressing SW1, you will hear a do-re-mi sound.-----\n");}
             printf("----- Press SW1 and SW2 to end the game.-----\n");
 
             printf("[%" PRIu32 "] %d, %d, %d / %d, %d, %d\n",
@@ -602,7 +602,7 @@ int main(int argc, FAR char *argv[])
                   data.gyro.x, data.gyro.y, data.gyro.z,
                   data.accel.x, data.accel.y, data.accel.z);
 
-            printf("dt=%f, gx=%f, gy=%f, gz=%f, deg(x)=%f, deg(y)=%f, deg(z)=%f\n", 
+@<seqsplit>{            printf("dt=%f, gx=%f, gy=%f, gz=%f, deg(x)=%f, deg(y)=%f, deg(z)=%f\n", }
               dt, gx, gy, gz,
               degree_x, degree_y, degree_z);
 
@@ -697,7 +697,7 @@ void play(float degree) {
       board_gpio_write(PIN_LED3, SPRESENSE_MAIN_BOARD_LED_TURN_OFF);
     } else {
       for (i = 0; i < 4; i++) {
-        board_gpio_write(spresense_main_board_led_pin[i], SPRESENSE_MAIN_BOARD_LED_TURN_ON);
+@<seqsplit>{        board_gpio_write(spresense_main_board_led_pin[i], SPRESENSE_MAIN_BOARD_LED_TURN_ON);}
       }
     }
   } else {
@@ -705,7 +705,7 @@ void play(float degree) {
       printf("audio_beep(NONE) failure.\n");
     }
     for (i = 0; i < 4; i++) {
-      board_gpio_write(spresense_main_board_led_pin[i], SPRESENSE_MAIN_BOARD_LED_TURN_OFF);
+@<seqsplit>{      board_gpio_write(spresense_main_board_led_pin[i], SPRESENSE_MAIN_BOARD_LED_TURN_OFF);}
     }
   }
 }
