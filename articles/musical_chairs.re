@@ -177,7 +177,7 @@ examples/audio_playerは10秒間音楽ファイルを5回再生して終了す�
 === 再生開始
 SW2押下が音楽ファイル再生のトリガです。
 停止状態からSW2押下でplay_or_pause_triggerがtrueになります。
-音楽ファイルを再生するには@<list>{app_play_process_list}のapp_start関数を呼び出します。
+音楽ファイルを再生するには@<list>{main_loop_app_start_list}のapp_start関数を呼び出します。
 
 //listnum[main_loop_app_start_list][メインループの再生開始箇所]{
   for (;;)
@@ -306,7 +306,7 @@ static int app_play_player(void)
 
 === 任意時間の再生について
 examples/audio_playerは10秒間の音楽ファイル再生ですが、椅子取りゲームでは任意の長さで再生できるように変更しています。
-任意の長さは@<list>{music_play_time_list}のように再生開始する時に3秒〜8秒の間で乱数により指定しています。
+任意の長さは@<list>{music_play_time_list}のように再生開始する時に3秒〜10秒の間で乱数により指定しています。
 
 //listnum[music_play_time_list][任意時間の指定]{
         case PLAY:

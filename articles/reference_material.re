@@ -24,3 +24,11 @@ BMI160の制御についてつぎのコードを参考にさせていただき�
 
  * @<href>{https://github.com/hanyazou/BMI160-Arduino/blob/master/examples/Gyro/Gyro.ino,BMI160サンプルプログラム}
 
+== Spresense SDKでライブラリを追加する方法
+つぎの2つのリンクが参考になりそうです。
+
+ * @<href>{https://qiita.com/ixy-shino/items/9c778243365cad50a443,SPRESENSE SDKに独自の拡張機能を追加する【External Library】}
+
+ * @<href>{https://ja.stackoverflow.com/questions/61027/spresense-sdk%e3%81%ab-static-library-a%e3%82%92%e8%bf%bd%e5%8a%a0%e3%81%99%e3%82%8b%e6%96%b9%e6%b3%95%e3%81%af,Spresense SDKに、Static Library (.a)を追加する方法は}
+
+

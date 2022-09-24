@@ -26,11 +26,11 @@ Spresense SDKのバージョンは執筆当時の最新版【v2.6.0 （2022/08/0
 
 デフォルトだとつぎのディレクトリになります。
 
-/Users/ユーザー名/spresense
+ * /Users/ユーザー名/spresense
 
 ここにコピーするのでつぎのようになります。
 
-/Users/ユーザー名/spresense/spresense_game-main
+ * /Users/ユーザー名/spresense/spresense_game-main
 
 spresense_game-mainディレクトリには3つのアプリがあります。
 
